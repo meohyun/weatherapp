@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:weatherapp/data/my_location.dart';
+import 'package:weatherapp/data/network.dart';
+import 'package:weatherapp/screen/weather_screen.dart';
+
+const api_key = "ebaaef08c448943a70edc9a42fae2852";
 
 class Loading extends StatefulWidget {
   const Loading({super.key});
@@ -11,37 +16,30 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
+  double latitude3 = 0.0;
+  double longtitude3 = 0.0;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getLocation();
-    fetchData();
   }
 
   //내 위치 위도,경도
   void getLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      print(position);
-    } catch (e) {
-      print("There was an error.");
-    }
-  }
+    MyLocation mylocation = MyLocation();
+    mylocation.getMyCurrentLocation();
+    latitude3 = mylocation.latitude2;
+    longtitude3 = mylocation.longtitude2;
 
-  void fetchData() async {
-    http.Response response = await http.get(Uri.parse(
-        'https://samples.openweathermap.org/data/2.5/weather?q=London&appid=b1b15e88fa797225412429c1c50c122a1'));
-    if (response.statusCode == 200) {
-      String _jsondata = response.body;
-      var _myjson = jsonDecode(_jsondata)['weather'][0]['description'];
-      var _wind = jsonDecode(_jsondata)['wind']['speed'];
-      var _id = jsonDecode(_jsondata)['id'];
-      print(_myjson);
-      print(_wind);
-      print(_id);
-    }
+    NetworkData _networkdata = NetworkData(
+        "https://api.openweathermap.org/data/2.5/weather?lat=$latitude3&lon=$longtitude3&appid=$api_key&units=metric");
+    var weatherData = await _networkdata.getFetchData();
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return WeatherScreen(parsingdata: weatherData);
+    }));
   }
 
   @override
