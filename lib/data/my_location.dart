@@ -10,8 +10,6 @@ class MyLocation {
           desiredAccuracy: LocationAccuracy.high);
       latitude2 = position.latitude;
       longtitude2 = position.longitude;
-      print(latitude2);
-      print(longtitude2);
     } catch (e) {
       print("There was an error.");
     }

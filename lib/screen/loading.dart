@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:weatherapp/data/my_location.dart';
 import 'package:weatherapp/data/network.dart';
 import 'package:weatherapp/screen/weather_screen.dart';
@@ -29,16 +26,19 @@ class _LoadingState extends State<Loading> {
   //내 위치 위도,경도
   void getLocation() async {
     MyLocation mylocation = MyLocation();
-    mylocation.getMyCurrentLocation();
+    await mylocation.getMyCurrentLocation();
     latitude3 = mylocation.latitude2;
     longtitude3 = mylocation.longtitude2;
 
     NetworkData _networkdata = NetworkData(
-        "https://api.openweathermap.org/data/2.5/weather?lat=$latitude3&lon=$longtitude3&appid=$api_key&units=metric");
+        "https://api.openweathermap.org/data/2.5/weather?lat=${latitude3}&lon=${longtitude3}&appid=$api_key&units=metric",
+        "http://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude3}&lon=${longtitude3}&appid=$api_key");
     var weatherData = await _networkdata.getFetchData();
+    var pollutionData = await _networkdata.getPollutionData();
 
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return WeatherScreen(parsingdata: weatherData);
+      return WeatherScreen(
+          parsingdata: weatherData, parsingdata2: pollutionData);
     }));
   }
 
