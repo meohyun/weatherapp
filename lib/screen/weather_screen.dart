@@ -35,8 +35,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget? text;
   double? air;
   double? air2;
-  int? current_temp;
-  int temp = 0;
+  int? temp;
+  int? sun_rise;
+  int? sun_set;
+  var sunset;
+  var sunrise;
+  double? wind_speed;
+
   var date = DateTime.now();
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -44,12 +49,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   // parsingdata에서 받아온 데이터로 업데이트
   void updataWeather(dynamic weatherData, dynamic pollutionData) {
+    print(weatherData);
     _name = weatherData['name'];
     _desc = weatherData['weather'][0]['description'];
     var grade = pollutionData['list'][0]['main']['aqi'];
     var index = pollutionData['list'][0]['main']['aqi'];
     int condition = weatherData['weather'][0]['id'];
     double _temp = weatherData['main']['temp'].toDouble();
+    wind_speed = weatherData['wind']['speed'];
+    sun_rise = weatherData['sys']['sunrise'];
+    sun_set = weatherData['sys']['sunset'];
+    sunrise =
+        DateTime.fromMillisecondsSinceEpoch(sun_rise! * 1000).toUtc().toLocal();
+    sunset =
+        DateTime.fromMillisecondsSinceEpoch(sun_set! * 1000).toUtc().toLocal();
     air = pollutionData['list'][0]['components']['pm2_5'];
     air2 = pollutionData['list'][0]['components']['pm10'];
     temp = _temp.round();
@@ -123,63 +136,172 @@ class _WeatherScreenState extends State<WeatherScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SizedBox(
-                                  height: 50,
-                                ),
-                                Text(
-                                  _name!,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 35,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
+                                  height: 10,
                                 ),
                                 Row(
                                   children: [
                                     // 시간
+                                    Text(
+                                      DateFormat('yyy, MMM ,d').format(date),
+                                      style: GoogleFonts.lato(
+                                          fontSize: 20, color: Colors.white),
+                                    ),
+                                    Text(
+                                      DateFormat(',EEEE').format(date),
+                                      style: GoogleFonts.lato(
+                                          fontSize: 20, color: Colors.white),
+                                    ),
                                     TimerBuilder.periodic(Duration(minutes: 1),
                                         builder: (context) {
                                       print("{$getSystemTime()}");
                                       return Text(
-                                        "${getSystemTime()}",
+                                        "  ${getSystemTime()}",
                                         style: GoogleFonts.lato(
-                                            fontSize: 16, color: Colors.white),
+                                            fontSize: 20, color: Colors.white),
                                       );
                                     }),
-                                    Text(
-                                      DateFormat('- EEEE').format(date),
-                                      style: GoogleFonts.lato(
-                                          fontSize: 16, color: Colors.white),
-                                    ),
-                                    Text(
-                                      DateFormat(',d MMM, yyy').format(date),
-                                      style: GoogleFonts.lato(
-                                          fontSize: 16, color: Colors.white),
-                                    ),
                                   ],
-                                )
+                                ),
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                SizedBox(
+                                  height: 30,
+                                ),
+                                Text(
+                                  _name!,
+                                  style: GoogleFonts.lato(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
                               ],
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "${temp.toString()}\u2103",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 85,
-                                      fontWeight: FontWeight.w300,
-                                      color: Colors.white),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 15),
+                                  child: Row(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Image.asset(
+                                            'image/sun_rise.png',
+                                            width: 37.0,
+                                            height: 35.0,
+                                            color: Colors.yellow,
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text(
+                                            DateFormat('HH : MM')
+                                                .format(sunrise),
+                                            style: GoogleFonts.lato(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        width: 30,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Image.asset(
+                                            'image/sun_rise.png',
+                                            width: 37.0,
+                                            height: 35.0,
+                                            color: Colors.white60,
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text(
+                                            DateFormat('HH : MM')
+                                                .format(sunset),
+                                            style: GoogleFonts.lato(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 15,
                                 ),
                                 Row(
                                   children: [
-                                    icon!,
-                                    SizedBox(
-                                      width: 10,
+                                    Icon(
+                                      Icons.thermostat_sharp,
+                                      size: 70,
+                                      color: Colors.redAccent,
                                     ),
-                                    Text(
-                                      _desc!,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 16, color: Colors.white),
-                                    )
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 15),
+                                      child: Text(
+                                        "${temp.toString()}\u2103",
+                                        style: GoogleFonts.lato(
+                                            fontSize: 70,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.white),
+                                      ),
+                                    ),
                                   ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 30),
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 10),
+                                        child: Icon(
+                                          Icons.wind_power_rounded,
+                                          size: 50,
+                                          color: Colors.blue[200],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 30),
+                                        child: Text(
+                                          "${wind_speed.toString()}m/s",
+                                          style: GoogleFonts.lato(
+                                              fontSize: 50,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 30),
+                                  child: Row(
+                                    children: [
+                                      icon!,
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 15),
+                                        child: Text(
+                                          _desc!,
+                                          style: GoogleFonts.lato(
+                                              fontSize: 30,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 )
                               ],
                             ),
