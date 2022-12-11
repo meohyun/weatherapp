@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -8,8 +6,11 @@ import 'package:timer_builder/timer_builder.dart';
 import 'package:weatherapp/model/weather_icon.dart';
 
 class WeatherScreen extends StatefulWidget {
-  const WeatherScreen(
-      {super.key, required this.parsingdata, required this.parsingdata2});
+  const WeatherScreen({
+    super.key,
+    required this.parsingdata,
+    required this.parsingdata2,
+  });
 
   final parsingdata;
   final parsingdata2;
@@ -27,15 +28,19 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   //변수 initialize
   Model model = Model();
-  String _name = "";
-  String _desc = "";
+  String? _name;
+  String? _desc;
   SvgPicture? icon;
   Widget? image;
   Widget? text;
   double? air;
   double? air2;
+  int? current_temp;
   int temp = 0;
   var date = DateTime.now();
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+  bool darkmode = false;
 
   // parsingdata에서 받아온 데이터로 업데이트
   void updataWeather(dynamic weatherData, dynamic pollutionData) {
@@ -58,6 +63,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return DateFormat("h:mm a").format(now);
   }
 
+  // refresh button
+  Future<void> _refresh() {
+    updataWeather(widget.parsingdata, widget.parsingdata2);
+    return Future<void>.delayed(const Duration(milliseconds: 1000));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,189 +76,212 @@ class _WeatherScreenState extends State<WeatherScreen> {
         appBar: AppBar(
           elevation: 0.0,
           backgroundColor: Colors.transparent,
-          leading: IconButton(onPressed: () {}, icon: Icon(Icons.near_me)),
-          actions: [IconButton(onPressed: () {}, icon: Icon(Icons.settings))],
+          leading: IconButton(
+              onPressed: () {
+                _refreshIndicatorKey.currentState?.show();
+              },
+              icon: Icon(Icons.refresh)),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    darkmode = !darkmode;
+                  });
+                },
+                icon: Icon(Icons.dark_mode))
+          ],
         ),
-        body: Container(
-          child: Stack(
-            children: [
-              Image.asset(
-                'image/background.jpg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-              Container(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                height: 50,
-                              ),
-                              Text(
-                                _name,
-                                style: GoogleFonts.lato(
-                                    fontSize: 35,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              ),
-                              Row(
-                                children: [
-                                  // 시간
-                                  TimerBuilder.periodic(Duration(minutes: 1),
-                                      builder: (context) {
-                                    print("{$getSystemTime()}");
-                                    return Text(
-                                      "${getSystemTime()}",
-                                      style: GoogleFonts.lato(
-                                          fontSize: 16, color: Colors.white),
-                                    );
-                                  }),
-                                  Text(
-                                    DateFormat('- EEEE').format(date),
-                                    style: GoogleFonts.lato(
-                                        fontSize: 16, color: Colors.white),
-                                  ),
-                                  Text(
-                                    DateFormat(',d MMM, yyy').format(date),
-                                    style: GoogleFonts.lato(
-                                        fontSize: 16, color: Colors.white),
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${temp.toString()}\u2103",
-                                style: GoogleFonts.lato(
-                                    fontSize: 85,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                              ),
-                              Row(
-                                children: [
-                                  icon!,
-                                  SizedBox(
-                                    width: 10,
-                                  ),
-                                  Text(
-                                    _desc,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 16, color: Colors.white),
-                                  )
-                                ],
-                              )
-                            ],
-                          ),
-                        ],
+        body: RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: _refresh,
+          child: Container(
+            child: Stack(
+              children: [
+                darkmode == false
+                    ? Image.asset(
+                        'image/background.jpg',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      )
+                    : Image.asset(
+                        'image/background_black.jpeg',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                    ),
-                    Column(
-                      children: [
-                        Divider(
-                          height: 15.0,
-                          thickness: 2.0,
-                          color: Colors.white30,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Container(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                SizedBox(
+                                  height: 50,
+                                ),
                                 Text(
-                                  "AOI(대기질지수)",
+                                  _name!,
                                   style: GoogleFonts.lato(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
                                 ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                image!,
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                text!,
+                                Row(
+                                  children: [
+                                    // 시간
+                                    TimerBuilder.periodic(Duration(minutes: 1),
+                                        builder: (context) {
+                                      print("{$getSystemTime()}");
+                                      return Text(
+                                        "${getSystemTime()}",
+                                        style: GoogleFonts.lato(
+                                            fontSize: 16, color: Colors.white),
+                                      );
+                                    }),
+                                    Text(
+                                      DateFormat('- EEEE').format(date),
+                                      style: GoogleFonts.lato(
+                                          fontSize: 16, color: Colors.white),
+                                    ),
+                                    Text(
+                                      DateFormat(',d MMM, yyy').format(date),
+                                      style: GoogleFonts.lato(
+                                          fontSize: 16, color: Colors.white),
+                                    ),
+                                  ],
+                                )
                               ],
                             ),
                             Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "미세먼지",
+                                  "${temp.toString()}\u2103",
                                   style: GoogleFonts.lato(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
+                                      fontSize: 85,
+                                      fontWeight: FontWeight.w300,
+                                      color: Colors.white),
                                 ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  "$air",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 35,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  "㎍/m3",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 14, color: Colors.white),
-                                ),
+                                Row(
+                                  children: [
+                                    icon!,
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      _desc!,
+                                      style: GoogleFonts.lato(
+                                          fontSize: 16, color: Colors.white),
+                                    )
+                                  ],
+                                )
                               ],
                             ),
-                            Column(
-                              children: [
-                                Text(
-                                  "초미세먼지",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  "$air2",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 35,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  "㎍/m3",
-                                  style: GoogleFonts.lato(
-                                      fontSize: 14, color: Colors.white),
-                                ),
-                              ],
-                            )
                           ],
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              )
-            ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          Divider(
+                            height: 15.0,
+                            thickness: 2.0,
+                            color: Colors.white30,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    "AOI(대기질지수)",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  image!,
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  text!,
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    "미세먼지",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "$air",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 35,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "㎍/m3",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 14, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    "초미세먼지",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "$air2",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 35,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "㎍/m3",
+                                    style: GoogleFonts.lato(
+                                        fontSize: 14, color: Colors.white),
+                                  ),
+                                ],
+                              )
+                            ],
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ));
   }

@@ -13,8 +13,8 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
-  double latitude3 = 0.0;
-  double longtitude3 = 0.0;
+  double? latitude3;
+  double? longtitude3;
 
   @override
   void initState() {
@@ -32,13 +32,15 @@ class _LoadingState extends State<Loading> {
 
     NetworkData _networkdata = NetworkData(
         "https://api.openweathermap.org/data/2.5/weather?lat=${latitude3}&lon=${longtitude3}&appid=$api_key&units=metric",
-        "http://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude3}&lon=${longtitude3}&appid=$api_key");
+        "https://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude3}&lon=${longtitude3}&appid=$api_key");
     var weatherData = await _networkdata.getFetchData();
     var pollutionData = await _networkdata.getPollutionData();
 
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return WeatherScreen(
-          parsingdata: weatherData, parsingdata2: pollutionData);
+        parsingdata: weatherData,
+        parsingdata2: pollutionData,
+      );
     }));
   }
 
