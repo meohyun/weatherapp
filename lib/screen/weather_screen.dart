@@ -10,10 +10,12 @@ class WeatherScreen extends StatefulWidget {
     super.key,
     required this.parsingdata,
     required this.parsingdata2,
+    required this.parsingdata3,
   });
 
   final parsingdata;
   final parsingdata2;
+  final parsingdata3;
 
   @override
   State<WeatherScreen> createState() => _WeatherScreenState();
@@ -23,13 +25,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   void initState() {
     // loading에서 데이터를 받아와서 업데이트
-    updataWeather(widget.parsingdata, widget.parsingdata2);
+    updataWeather(widget.parsingdata, widget.parsingdata2, widget.parsingdata3);
   }
 
   //변수 initialize
   Model model = Model();
   String? _name;
   String? _desc;
+  String? _svg_name;
   SvgPicture? icon;
   Widget? image;
   Widget? text;
@@ -38,6 +41,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
   int? temp;
   int? sun_rise;
   int? sun_set;
+  List forecast_date = [];
+  List forecast_condition = [];
+  List forecast_icon = [];
   var sunset;
   var sunrise;
   double? wind_speed;
@@ -48,10 +54,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
   bool darkmode = false;
 
   // parsingdata에서 받아온 데이터로 업데이트
-  void updataWeather(dynamic weatherData, dynamic pollutionData) {
-    print(weatherData);
+  void updataWeather(
+      dynamic weatherData, dynamic pollutionData, dynamic forecastData) {
     _name = weatherData['name'];
-    _desc = weatherData['weather'][0]['description'];
+    _desc = weatherData['weather'][0]['main'];
     var grade = pollutionData['list'][0]['main']['aqi'];
     var index = pollutionData['list'][0]['main']['aqi'];
     int condition = weatherData['weather'][0]['id'];
@@ -69,6 +75,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
     icon = model.getWeatherIcon(condition);
     image = model.getAirIcon(index);
     text = model.getAirCondition(grade);
+
+    // forecast
+    for (int i = 0; i < 5; i++) {
+      int a = forecastData['list'][i]['dt'];
+      int id = forecastData['list'][i]['weather'][0]['id'];
+      var date_time = DateTime.fromMillisecondsSinceEpoch(a * 1000).toLocal();
+      forecast_date.add(date_time);
+      forecast_condition.add(id);
+      _svg_name = model.getsvgname(forecast_condition[i]);
+      forecast_icon.add(_svg_name);
+    }
   }
 
   String getSystemTime() {
@@ -78,7 +95,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   // refresh button
   Future<void> _refresh() {
-    updataWeather(widget.parsingdata, widget.parsingdata2);
+    updataWeather(widget.parsingdata, widget.parsingdata2, widget.parsingdata3);
     return Future<void>.delayed(const Duration(milliseconds: 1000));
   }
 
@@ -96,12 +113,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
               icon: Icon(Icons.refresh)),
           actions: [
             IconButton(
-                onPressed: () {
-                  setState(() {
-                    darkmode = !darkmode;
-                  });
-                },
-                icon: Icon(Icons.dark_mode))
+              onPressed: () {
+                setState(() {
+                  darkmode = !darkmode;
+                });
+              },
+              icon: Icon(Icons.dark_mode),
+              color: darkmode == true ? Colors.yellow : Colors.white,
+            )
           ],
         ),
         body: RefreshIndicator(
@@ -136,7 +155,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SizedBox(
-                                  height: 10,
+                                  height: 80,
                                 ),
                                 Row(
                                   children: [
@@ -295,12 +314,69 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                         child: Text(
                                           _desc!,
                                           style: GoogleFonts.lato(
-                                              fontSize: 30,
+                                              fontSize: 50,
                                               color: Colors.white,
-                                              fontWeight: FontWeight.bold),
+                                              fontWeight: FontWeight.w400),
                                         ),
                                       )
                                     ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 20, 0, 0),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: 5,
+                                        itemBuilder: (context, index) {
+                                          return Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 30),
+                                                    child: Text(
+                                                      DateFormat(
+                                                        'HH시',
+                                                      ).format(
+                                                          forecast_date[index]),
+                                                      style: GoogleFonts.lato(
+                                                          fontSize: 23,
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w400),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 10),
+                                                child: Row(
+                                                  children: [
+                                                    Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                right: 30),
+                                                        child: SvgPicture.asset(
+                                                          forecast_icon[index],
+                                                          width: 50,
+                                                          height: 50,
+                                                          color: Colors
+                                                              .greenAccent,
+                                                        ))
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }),
                                   ),
                                 )
                               ],
