@@ -32,7 +32,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Model model = Model();
   String? _name;
   String? _desc;
-  String? _svg_name;
+  String? _current_icon_name;
   SvgPicture? icon;
   Widget? image;
   Widget? text;
@@ -42,8 +42,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
   int? sun_rise;
   int? sun_set;
   List forecast_date = [];
-  List forecast_condition = [];
   List forecast_icon = [];
+  List forecast_temp = [];
   var sunset;
   var sunrise;
   double? wind_speed;
@@ -56,35 +56,39 @@ class _WeatherScreenState extends State<WeatherScreen> {
   // parsingdata에서 받아온 데이터로 업데이트
   void updataWeather(
       dynamic weatherData, dynamic pollutionData, dynamic forecastData) {
+    print(weatherData);
     _name = weatherData['name'];
     _desc = weatherData['weather'][0]['main'];
-    var grade = pollutionData['list'][0]['main']['aqi'];
-    var index = pollutionData['list'][0]['main']['aqi'];
     int condition = weatherData['weather'][0]['id'];
+    _current_icon_name = weatherData['weather'][0]['icon'];
+
     double _temp = weatherData['main']['temp'].toDouble();
+    temp = _temp.round();
+
     wind_speed = weatherData['wind']['speed'];
     sun_rise = weatherData['sys']['sunrise'];
     sun_set = weatherData['sys']['sunset'];
-    sunrise =
-        DateTime.fromMillisecondsSinceEpoch(sun_rise! * 1000).toUtc().toLocal();
-    sunset =
-        DateTime.fromMillisecondsSinceEpoch(sun_set! * 1000).toUtc().toLocal();
+    sunrise = DateTime.fromMillisecondsSinceEpoch(sun_rise! * 1000).toLocal();
+    sunset = DateTime.fromMillisecondsSinceEpoch(sun_set! * 1000).toLocal();
+
+    //pollutiondata
+    var grade = pollutionData['list'][0]['main']['aqi'];
+    var index = pollutionData['list'][0]['main']['aqi'];
     air = pollutionData['list'][0]['components']['pm2_5'];
     air2 = pollutionData['list'][0]['components']['pm10'];
-    temp = _temp.round();
-    icon = model.getWeatherIcon(condition);
     image = model.getAirIcon(index);
     text = model.getAirCondition(grade);
 
-    // forecast
+    // forecastdata
     for (int i = 0; i < 5; i++) {
       int a = forecastData['list'][i]['dt'];
       int id = forecastData['list'][i]['weather'][0]['id'];
+      String icon_name = forecastData['list'][i]['weather'][0]['icon'];
+      double f_temp = forecastData['list'][i]['main']['temp'];
       var date_time = DateTime.fromMillisecondsSinceEpoch(a * 1000).toLocal();
       forecast_date.add(date_time);
-      forecast_condition.add(id);
-      _svg_name = model.getsvgname(forecast_condition[i]);
-      forecast_icon.add(_svg_name);
+      forecast_temp.add(f_temp.round());
+      forecast_icon.add(icon_name);
     }
   }
 
@@ -159,16 +163,66 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                 ),
                                 Row(
                                   children: [
+                                    Row(
+                                      children: [
+                                        Image.asset(
+                                          'image/sun_rise.png',
+                                          width: 37.0,
+                                          height: 35.0,
+                                          color: Colors.yellow,
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          DateFormat('HH : mm').format(sunrise),
+                                          style: GoogleFonts.lato(
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      width: 30,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Image.asset(
+                                          'image/sun_rise.png',
+                                          width: 37.0,
+                                          height: 35.0,
+                                          color: Colors.white60,
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          DateFormat('HH : mm').format(sunset),
+                                          style: GoogleFonts.lato(
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  children: [
                                     // 시간
                                     Text(
                                       DateFormat('yyy, MMM ,d').format(date),
                                       style: GoogleFonts.lato(
-                                          fontSize: 20, color: Colors.white),
+                                          fontSize: 25, color: Colors.white),
                                     ),
                                     Text(
-                                      DateFormat(',EEEE').format(date),
+                                      DateFormat(', EEEE').format(date),
                                       style: GoogleFonts.lato(
-                                          fontSize: 20, color: Colors.white),
+                                          fontSize: 25, color: Colors.white),
                                     ),
                                     TimerBuilder.periodic(Duration(minutes: 1),
                                         builder: (context) {
@@ -176,13 +230,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       return Text(
                                         "  ${getSystemTime()}",
                                         style: GoogleFonts.lato(
-                                            fontSize: 20, color: Colors.white),
+                                            fontSize: 25, color: Colors.white),
                                       );
                                     }),
                                   ],
-                                ),
-                                SizedBox(
-                                  height: 20,
                                 ),
                                 SizedBox(
                                   height: 30,
@@ -199,61 +250,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 15),
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            'image/sun_rise.png',
-                                            width: 37.0,
-                                            height: 35.0,
-                                            color: Colors.yellow,
-                                          ),
-                                          SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            DateFormat('HH : MM')
-                                                .format(sunrise),
-                                            style: GoogleFonts.lato(
-                                                fontSize: 30,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        width: 30,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            'image/sun_rise.png',
-                                            width: 37.0,
-                                            height: 35.0,
-                                            color: Colors.white60,
-                                          ),
-                                          SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            DateFormat('HH : MM')
-                                                .format(sunset),
-                                            style: GoogleFonts.lato(
-                                                fontSize: 30,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 15,
-                                ),
                                 Row(
                                   children: [
                                     Icon(
@@ -266,7 +262,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       child: Text(
                                         "${temp.toString()}\u2103",
                                         style: GoogleFonts.lato(
-                                            fontSize: 70,
+                                            fontSize: 40,
                                             fontWeight: FontWeight.w400,
                                             color: Colors.white),
                                       ),
@@ -292,7 +288,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                         child: Text(
                                           "${wind_speed.toString()}m/s",
                                           style: GoogleFonts.lato(
-                                              fontSize: 50,
+                                              fontSize: 40,
                                               fontWeight: FontWeight.w400,
                                               color: Colors.white),
                                         ),
@@ -304,17 +300,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                   padding: const EdgeInsets.only(top: 30),
                                   child: Row(
                                     children: [
-                                      icon!,
+                                      Image.network(
+                                        'http://openweathermap.org/img/wn/$_current_icon_name@2x.png',
+                                        width: 80,
+                                        height: 80,
+                                      ),
                                       SizedBox(
                                         width: 10,
                                       ),
                                       Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 15),
+                                        padding: const EdgeInsets.only(left: 5),
                                         child: Text(
                                           _desc!,
                                           style: GoogleFonts.lato(
-                                              fontSize: 50,
+                                              fontSize: 40,
                                               color: Colors.white,
                                               fontWeight: FontWeight.w400),
                                         ),
@@ -322,12 +321,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                     ],
                                   ),
                                 ),
+                                Divider(
+                                  height: 10,
+                                  color: Colors.white,
+                                ),
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(10, 20, 0, 0),
+                                  padding: const EdgeInsets.only(top: 20),
                                   child: Container(
                                     width: double.infinity,
-                                    height: 150,
+                                    height: 130,
                                     child: ListView.builder(
                                         scrollDirection: Axis.horizontal,
                                         itemCount: 5,
@@ -364,12 +366,44 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                                             const EdgeInsets
                                                                     .only(
                                                                 right: 30),
-                                                        child: SvgPicture.asset(
-                                                          forecast_icon[index],
-                                                          width: 50,
-                                                          height: 50,
-                                                          color: Colors
-                                                              .greenAccent,
+                                                        child: Image.network(
+                                                          'http://openweathermap.org/img/wn/${forecast_icon[index]}@2x.png',
+                                                          width: 55,
+                                                          height: 55,
+                                                        )
+                                                        // SvgPicture.asset(
+                                                        //   forecast_icon[index],
+                                                        //   width: 50,
+                                                        //   height: 50,
+                                                        //   color: Colors
+                                                        //       .greenAccent,
+                                                        // )
+                                                        )
+                                                  ],
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 10),
+                                                child: Row(
+                                                  children: [
+                                                    Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                right: 30),
+                                                        child: Text(
+                                                          forecast_temp[index]
+                                                                  .toString() +
+                                                              "\u2103",
+                                                          style:
+                                                              GoogleFonts.lato(
+                                                                  fontSize: 15,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold),
                                                         ))
                                                   ],
                                                 ),
@@ -387,7 +421,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       Column(
                         children: [
                           Divider(
-                            height: 15.0,
+                            height: 20.0,
                             thickness: 2.0,
                             color: Colors.white30,
                           ),

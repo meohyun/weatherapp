@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:weatherapp/data/my_location.dart';
 import 'package:weatherapp/data/network.dart';
 import 'package:weatherapp/screen/weather_screen.dart';
@@ -33,7 +34,7 @@ class _LoadingState extends State<Loading> {
     NetworkData _networkdata = NetworkData(
         "https://api.openweathermap.org/data/2.5/weather?lat=${latitude3}&lon=${longtitude3}&appid=$api_key&units=metric",
         "https://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude3}&lon=${longtitude3}&appid=$api_key",
-        "https://api.openweathermap.org/data/2.5/forecast?lat=${latitude3}&lon=${longtitude3}&appid=$api_key");
+        "https://api.openweathermap.org/data/2.5/forecast?lat=${latitude3}&lon=${longtitude3}&appid=$api_key&units=metric");
     var weatherData = await _networkdata.getFetchData();
     var pollutionData = await _networkdata.getPollutionData();
     var forecastData = await _networkdata.getForecastData();
@@ -51,7 +52,22 @@ class _LoadingState extends State<Loading> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: TextButton(onPressed: () {}, child: Text("Get Location")),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "날씨 정보를 불러오는 중입니다.",
+              style: GoogleFonts.lato(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            CircularProgressIndicator(),
+          ],
+        ),
       ),
     );
   }
